@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""米醋画图 MCP 一键安装脚本。
+"""mcp-image-share 一键安装脚本。
 
 跨平台（macOS / Linux / Windows）：
 - 自动 pip install 依赖（实时输出 / 可选国内镜像）
@@ -7,12 +7,10 @@
 - 自动写入 Claude Code / Codex CLI 配置（已存在则备份再合并）
 - 同步设置 MICU_SAVE_DIR_ROOT 沙箱根，避免自定义目录被沙箱拒
 - 自检 server 能不能起来 + 给出脱敏摘要
-- 检测 Claude Code / Codex 进程并提示先关再启
 
 用法：
     python install.py
     python install.py --mirror tsinghua            # 用清华镜像装 pip 包
-    python install.py --baseurl https://...        # 高级: 覆盖 baseurl
     python install.py --no-codex                   # 不写 Codex 配置
     python install.py --no-claude                  # 不写 Claude 配置
     python install.py --yes                        # 非交互, 全用环境变量
@@ -40,7 +38,7 @@ PIP_MIRRORS = {
     "default": None,
 }
 
-DEFAULT_BASEURL = "https://www.micuapi.ai"
+DEFAULT_BASEURL = "https://new.misscuai.help"
 
 
 # ---------- 日志输出 ----------
@@ -182,11 +180,10 @@ def collect_config(non_interactive: bool, baseurl: str) -> tuple[str, str, str]:
         if not api_key:
             err("--yes 模式需要环境变量 MICU_API_KEY=sk-...")
     else:
-        print("\n=== 配置米醋 MCP ===")
+        print("\n=== 配置 mcp-image-share ===")
         info(f"baseurl: {baseurl}")
-        info("API key 在米醋后台拿: https://www.micuapi.ai")
         while True:
-            api_key = ask("米醋 API key (sk-...)", secret=True)
+            api_key = ask("API key (sk-...)", secret=True)
             if not api_key:
                 warn("API key 不能为空")
                 continue
@@ -249,9 +246,9 @@ def write_claude(server_path: str, env_dict: dict) -> Path:
         if not isinstance(data, dict):
             err("~/.claude.json 顶层不是 object, 备份已留, 请手动检查")
     servers = data.setdefault("mcpServers", {})
-    if "micu-image" in servers:
-        info("已存在 micu-image 配置, 覆盖")
-    servers["micu-image"] = {
+    if "mcp-image-share" in servers:
+        info("已存在 mcp-image-share 配置, 覆盖")
+    servers["mcp-image-share"] = {
         "command": sys.executable,
         "args": [server_path],
         "env": env_dict,
@@ -268,11 +265,11 @@ def write_codex(server_path: str, env_dict: dict) -> Path:
     cfg_dir.mkdir(parents=True, exist_ok=True)
 
     def tstr(s: str) -> str:
-        return json.dumps(s, ensure_ascii=False)  # JSON 字符串字面量恰好也是合法 TOML basic string
+        return json.dumps(s, ensure_ascii=False)
 
     env_inline = ", ".join(f"{k} = {tstr(v)}" for k, v in env_dict.items())
     block = (
-        "\n[mcp_servers.micu-image]\n"
+        "\n[mcp_servers.mcp-image-share]\n"
         f"command = {tstr(sys.executable)}\n"
         f"args = [{tstr(server_path)}]\n"
         f"env = {{ {env_inline} }}\n"
@@ -280,8 +277,8 @@ def write_codex(server_path: str, env_dict: dict) -> Path:
 
     if cfg.exists():
         existing = cfg.read_text(encoding="utf-8")
-        if "[mcp_servers.micu-image]" in existing:
-            warn("已存在 [mcp_servers.micu-image] 节, 跳过 (避免破坏其他配置)")
+        if "[mcp_servers.mcp-image-share]" in existing:
+            warn("已存在 [mcp_servers.mcp-image-share] 节, 跳过")
             warn(f"如需更新: 手动删旧节后重跑, 或编辑 {cfg}")
             return cfg
         _backup(cfg)
@@ -355,24 +352,24 @@ def summary(env_dict: dict, claude_cfg: Path | None, codex_cfg: Path | None,
 # ---------- main ----------
 
 def parse_args() -> argparse.Namespace:
-    p = argparse.ArgumentParser(description="米醋画图 MCP 一键安装")
+    p = argparse.ArgumentParser(description="mcp-image-share 一键安装")
     p.add_argument("--no-claude", action="store_true", help="不写 Claude Code 配置")
     p.add_argument("--no-codex", action="store_true", help="不写 Codex CLI 配置")
     p.add_argument("--no-smoke", action="store_true", help="跳过自检")
     p.add_argument("--yes", action="store_true",
                    help="非交互模式 (从环境变量读 MICU_API_KEY / MICU_SAVE_DIR)")
     p.add_argument("--mirror", choices=list(PIP_MIRRORS.keys()), default="default",
-                   help=f"pip 镜像 (默认: 官方源). 可选: {', '.join(k for k in PIP_MIRRORS if k != 'default')}")
+                   help=f"pip 镜像. 可选: {', '.join(k for k in PIP_MIRRORS if k != 'default')}")
     p.add_argument("--pypi-index", default=None, help="自定义 pip index URL (覆盖 --mirror)")
     p.add_argument("--baseurl", default=DEFAULT_BASEURL,
-                   help=f"米醋代理 baseurl (默认 {DEFAULT_BASEURL})")
+                   help=f"API baseurl (默认 {DEFAULT_BASEURL})")
     return p.parse_args()
 
 
 def main() -> None:
     args = parse_args()
 
-    print("=== 米醋画图 MCP 一键安装 ===\n")
+    print("=== mcp-image-share 一键安装 ===\n")
     check_python()
     check_pip()
     check_running_clients()

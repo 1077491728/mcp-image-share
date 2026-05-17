@@ -42,7 +42,23 @@ pip install -e .
 
 ## 配置
 
-### Claude Code
+### 一键安装（推荐）
+
+```bash
+python install.py
+```
+
+脚本自动安装依赖、交互配置 key、写入 Claude Code 和 Codex CLI 配置。
+
+选项：
+```bash
+python install.py --no-codex          # 只写 Claude Code
+python install.py --no-claude         # 只写 Codex
+python install.py --mirror tsinghua   # pip 走清华镜像
+python install.py --yes               # 非交互（从 env 读）
+```
+
+### Claude Code 手动配置
 
 在项目目录下创建 `.claude/settings.json`：
 
@@ -63,7 +79,18 @@ pip install -e .
 }
 ```
 
-重启 Claude Code 即可使用。
+### Codex CLI 手动配置
+
+编辑 `~/.codex/config.toml`：
+
+```toml
+[mcp_servers.mcp-image-share]
+command = "python"
+args = ["<clone 路径>/server.py"]
+env = { MICU_API_KEY = "sk-your-key", MICU_BASEURL = "https://new.misscuai.help", MICU_SAVE_DIR = "~/Pictures/micu-out" }
+```
+
+配置完重启客户端即可。
 
 ---
 
