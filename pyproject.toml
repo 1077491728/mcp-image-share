@@ -1,0 +1,19 @@
+[project]
+name = "mcp-image-share"
+version = "0.1.0"
+description = "MCP server for image generation and sharing via gpt-image-2"
+requires-python = ">=3.10"
+dependencies = [
+    "mcp[cli]>=1.0.0",
+    "httpx>=0.27.0",
+]
+
+[project.scripts]
+mcp-image-share = "server:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+py-modules = ["server"]
